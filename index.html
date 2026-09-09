@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📖 せいとずかん</title>
+  <style>
+    :root {
+      --bg-color: #f4f8fa;
+      --card-bg: #ffffff;
+      --primary: #4a90e2;
+      --primary-hover: #357abd;
+      --accent: #ff7e67;
+      --text: #2c3e50;
+      --text-sub: #7f8c8d;
+      --border: #e0e6ed;
+      --shadow: 0 8px 20px rgba(0,0,0,0.06);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    #app-container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-color);
+      min-height: 100vh;
+      position: relative;
+      padding: 16px;
+    }
+
+    /* ヘッダー */
+    header {
+      text-align: center;
+      padding: 20px 0 16px 0;
+      cursor: pointer;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      color: var(--primary);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    header p {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    /* ボタン */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    }
+    .btn-secondary {
+      background-color: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-danger {
+      background-color: #e74c3c;
+      color: white;
+      margin-top: 20px;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ビュー */
+    .view {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .view.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* トップページ */
+    .hero-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 20px 0 30px 0;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 検索バー */
+    .search-box {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      outline: none;
+      margin-bottom: 20px;
+      background: white;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus {
+      border-color: var(--primary);
+    }
+
+    /* カード */
+    .card-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .card:active {
+      transform: scale(0.99);
+    }
+    
+    /* アイコン表示用スタイル（写真/絵文字 両対応） */
+    .icon-display {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #f0f4f8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      font-size: 2.2rem;
+      object-fit: cover;
+    }
+
+    .card-info {
+      flex: 1;
+      overflow: hidden;
+    }
+    .card-nickname {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .card-tag {
+      display: inline-block;
+      background: #eef5fc;
+      color: var(--primary);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-right: 4px;
+      font-weight: 600;
+    }
+    .card-message {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-top: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* フォーム */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .form-group label .required {
+      color: var(--accent);
+      margin-left: 4px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background: white;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    /* アイコン選択プレビュー用 */
+    .icon-picker-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .icon-preview {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #eef5fc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      overflow: hidden;
+      border: 2px dashed var(--border);
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+    .icon-picker-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+    .file-input-btn {
+      display: inline-block;
+      padding: 8px 12px;
+      background: #f0f4f8;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--text);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .error-msg {
+      color: var(--accent);
+      font-size: 0.85rem;
+      margin-top: 6px;
+      display: none;
+    }
+
+    /* 詳細ページ */
+    .detail-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .detail-icon-display {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #eef5fc;
+      margin: 0 auto 12px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      overflow: hidden;
+      object-fit: cover;
+    }
+    .detail-nickname {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    .detail-list {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .detail-item {
+      background: var(--bg-color);
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+    .detail-item-title {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      font-weight: bold;
+    }
+    .detail-item-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .talk-badge {
+      display: inline-block;
+      background: #e3f9e5;
+      color: #1f8a70;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--text-sub);
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .complete-box {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .complete-box h2 {
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .demo-footer {
+      margin-top: 40px;
+      padding: 12px;
+      background: #e8ecef;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-container">
+
+  <!-- ヘッダー -->
+  <header onclick="navTo('top-view')">
+    <h1>📖 せいとずかん</h1>
+    <p>タップして、知らなかった誰かを知ろう。</p>
+  </header>
+
+  <!-- 1. トップページ -->
+  <div id="top-view" class="view active">
+    <div class="hero-buttons">
+      <button class="btn btn-primary" onclick="navTo('list-view')">🔎 プロフィールを見る</button>
+      <button class="btn btn-secondary" onclick="navTo('auth-view')">✏️ 自分のプロフィールを作る / 編集</button>
+    </div>
+
+    <div class="section-title">✨ 最近追加されたプロフィール</div>
+    <div id="recent-cards" class="card-grid"></div>
+  </div>
+
+  <!-- 2 & 3. 一覧 & 検索 -->
+  <div id="list-view" class="view">
+    <span class="back-link" onclick="navTo('top-view')">← トップへ戻る</span>
+    <input type="text" id="search-input" class="search-box" placeholder="名前や好きなものを検索（例：音楽、ゲーム）" oninput="renderList()">
+    
+    <div id="all-cards" class="card-grid"></div>
+  </div>
+
+  <!-- 4. 登録コード入力 -->
+  <div id="auth-view" class="view">
+    <span class="back-link" onclick="navTo('top-view')">← トップへ戻る</span>
+    <div style="background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border);">
+      <h2 style="font-size: 1.1rem; margin-bottom: 8px;">🔐 登録コードを入力してください</h2>
+      <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 16px;">学校から配布された自分の登録コードを入力してください。</p>
+      
+      <div class="form-group">
+        <input type="text" id="code-input" class="form-control" placeholder="例: TAP-7K4M-29" style="text-transform: uppercase;">
+        <div id="auth-error" class="error-msg">登録コードが正しくありません。</div>
+      </div>
+      <button class="btn btn-primary" onclick="verifyCode()">次へ進む</button>
+    </div>
+  </div>
+
+  <!-- 5. プロフィール作成・編集フォーム -->
+  <div id="form-view" class="view">
+    <span class="back-link" onclick="navTo('top-view')">← キャンセル</span>
+    <h2 id="form-title" style="font-size: 1.2rem; margin-bottom: 16px;">プロフィール入力</h2>
+    
+    <form id="profile-form" onsubmit="saveProfile(event)">
+      <!-- 写真・アイコン選択（追加） -->
+      <div class="form-group">
+        <label>アイコン（写真またはイラスト）</label>
+        <div class="icon-picker-container">
+          <div id="icon-preview-box" class="icon-preview">🐱</div>
+          <div class="icon-picker-controls">
+            <label class="file-input-btn">
+              📷 端末の写真から選ぶ
+              <input type="file" id="form-file-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+            </label>
+            <select id="form-icon-select" class="form-control" onchange="handlePresetIconSelect(this.value)">
+              <option value="">-- イラスト一覧から選ぶ --</option>
+              <option value="🐱">🐱 ねこ</option>
+              <option value="🐶">🐶 いぬ</option>
+              <option value="🐰">🐰 うさぎ</option>
+              <option value="🦊">🦊 きつね</option>
+              <option value="🐼">🐼 ぱんだ</option>
+              <option value="🚀">🚀 ロケット</option>
+              <option value="🎨">🎨 アート</option>
+              <option value="⚽">⚽ スポーツ</option>
+              <option value="🎮">🎮 ゲーム</option>
+              <option value="🎵">🎵 音楽</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 必須項目 -->
+      <div class="form-group">
+        <label>ニックネーム<span class="required">*</span></label>
+        <input type="text" id="form-nickname" class="form-control" placeholder="例：ことみ" required maxlength="15">
+      </div>
+
+      <div class="form-group">
+        <label>好きなもの<span class="required">*</span></label>
+        <input type="text" id="form-likes" class="form-control" placeholder="例：音楽、ラーメン" required maxlength="30">
+      </div>
+
+      <div class="form-group">
+        <label>趣味<span class="required">*</span></label>
+        <input type="text" id="form-hobbies" class="form-control" placeholder="例：ゲーム、イラストを描くこと" required maxlength="30">
+      </div>
+
+      <div class="form-group">
+        <label>一言<span class="required">*</span></label>
+        <input type="text" id="form-message" class="form-control" placeholder="例：よろしく！気軽に声かけてね" required maxlength="40">
+      </div>
+
+      <!-- 任意項目 -->
+      <div class="form-group">
+        <label>好きな音楽（任意）</label>
+        <input type="text" id="form-music" class="form-control" placeholder="例：J-POP、ボカロ" maxlength="30">
+      </div>
+
+      <div class="form-group">
+        <label>最近ハマっていること（任意）</label>
+        <input type="text" id="form-recent" class="form-control" placeholder="例：Web制作、動画編集" maxlength="30">
+      </div>
+
+      <div class="form-group" style="margin-top: 20px;">
+        <label class="checkbox-label">
+          <input type="checkbox" id="form-talk-ok" style="width: 18px; height: 18px;">
+          💬 話しかけてOK！
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="margin-top: 20px;">登録・保存する</button>
+      <button type="button" id="delete-btn" class="btn btn-danger" onclick="deleteProfile()" style="display:none;">プロフィールを削除</button>
+    </form>
+  </div>
+
+  <!-- 6. 完成画面 -->
+  <div id="complete-view" class="view">
+    <div class="complete-box">
+      <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+      <h2>プロフィールが完成しました！📖</h2>
+      <p style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 24px;">図鑑にあなたのプロフィールが追加されました。</p>
+      
+      <button class="btn btn-primary" id="view-my-profile-btn">自分のプロフィールを見る</button>
+      <button class="btn btn-secondary" onclick="navTo('top-view')" style="margin-top: 10px;">トップに戻る</button>
+    </div>
+  </div>
+
+  <!-- 詳細表示画面 -->
+  <div id="detail-view" class="view">
+    <span class="back-link" onclick="navTo('list-view')">← 一覧に戻る</span>
+    <div class="detail-card">
+      <div id="detail-icon-container">
+        <!-- JSで画像か文字か分岐表示 -->
+      </div>
+      <div id="detail-nickname" class="detail-nickname">---</div>
+      
+      <div id="detail-talk-ok" class="talk-badge" style="display: none;">💬 話しかけてOK！</div>
+      
+      <div class="detail-list" style="margin-top: 20px;">
+        <div class="detail-item">
+          <div class="detail-item-title">❤️ 好きなもの</div>
+          <div id="detail-likes" class="detail-item-value">-</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-title">✨ 趣味</div>
+          <div id="detail-hobbies" class="detail-item-value">-</div>
+        </div>
+        <div class="detail-item" id="detail-music-box">
+          <div class="detail-item-title">🎵 好きな音楽</div>
+          <div id="detail-music" class="detail-item-value">-</div>
+        </div>
+        <div class="detail-item" id="detail-recent-box">
+          <div class="detail-item-title">🔥 最近ハマっていること</div>
+          <div id="detail-recent" class="detail-item-value">-</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-title">💬 一言メッセージ</div>
+          <div id="detail-message" class="detail-item-value">-</div>
+        </div>
+      </div>
+      
+      <p style="font-size: 0.75rem; color: var(--text-sub);" id="detail-id">ID: ---</p>
+    </div>
+  </div>
+
+  <!-- テスト補助表示 -->
+  <div class="demo-footer">
+    <strong>🧪 試作テスト用・使用可能コード例:</strong><br>
+    TAP-7K4M-29 / TAP-Q8R2-51 / TAP-3F9X-74 / TAP-M6D2-18 / TAP-8P5L-63<br>
+    TAP-R4N7-82 / TAP-2W6K-45 / TAP-H9C3-17 / TAP-5J8Q-36 / TAP-X2V7-94
+  </div>
+
+</div>
+
+<script>
+  const VALID_CODES = [
+    "TAP-7K4M-29", "TAP-Q8R2-51", "TAP-3F9X-74", "TAP-M6D2-18", "TAP-8P5L-63",
+    "TAP-R4N7-82", "TAP-2W6K-45", "TAP-H9C3-17", "TAP-5J8Q-36", "TAP-X2V7-94"
+  ];
+
+  const INITIAL_PROFILES = [
+    {
+      id: "abc123",
+      code: "TAP-7K4M-29",
+      nickname: "ことみ",
+      icon: "🐱",
+      likes: "音楽、甘いもの",
+      hobbies: "ゲーム、イラスト",
+      music: "J-POP",
+      recent: "Web制作",
+      message: "よろしく！気軽に話しかけてね！",
+      talk_ok: true,
+      createdAt: 1700000000000
+    }
+  ];
+
+  let currentIconData = "🐱"; // 現在フォームで選択中のアイコン（文字か画像Base64）
+  let currentAuthenticatedCode = null;
+
+  function getStoredProfiles() {
+    const data = localStorage.getItem('seito_zukan_profiles');
+    if (!data) {
+      localStorage.setItem('seito_zukan_profiles', JSON.stringify(INITIAL_PROFILES));
+      return INITIAL_PROFILES;
+    }
+    return JSON.parse(data);
+  }
+
+  function saveStoredProfiles(profiles) {
+    localStorage.setItem('seito_zukan_profiles', JSON.stringify(profiles));
+  }
+
+  function navTo(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    window.scrollTo(0, 0);
+
+    if (viewId === 'top-view') {
+      renderTopView();
+    } else if (viewId === 'list-view') {
+      renderList();
+    }
+  }
+
+  function generateId() {
+    return Math.random().toString(36).substring(2, 8);
+  }
+
+  // --- 写真のアップロード処理 & 自動軽量リサイズ ---
+  function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = new Image();
+      img.onload = function() {
+        // 画像を正方形かつ小さくリサイズ (200x200px)
+        const canvas = document.createElement('canvas');
+        const size = 200;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // 正方形にトリミング描画
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+        
+        // 圧縮したDataURLを取得
+        currentIconData = canvas.toDataURL('image/jpeg', 0.8);
+        updateFormIconPreview();
+        document.getElementById('form-icon-select').value = ""; // プリセット選択解除
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // --- イラスト（絵文字）プリセット選択時の処理 ---
+  function handlePresetIconSelect(val) {
+    if (!val) return;
+    currentIconData = val;
+    updateFormIconPreview();
+  }
+
+  // フォーム上のプレビュー要素を更新
+  function updateFormIconPreview() {
+    const box = document.getElementById('icon-preview-box');
+    if (currentIconData.startsWith('data:image')) {
+      box.innerHTML = `<img src="${currentIconData}" style="width:100%; height:100%; object-fit:cover;">`;
+    } else {
+      box.innerHTML = currentIconData || '👤';
+    }
+  }
+
+  // アイコン描画用共通HTMLを返す関数
+  function renderIconHtml(iconData, className = "icon-display") {
+    if (iconData && iconData.startsWith('data:image')) {
+      return `<img src="${iconData}" class="${className}">`;
+    } else {
+      return `<div class="${className}">${iconData || '👤'}</div>`;
+    }
+  }
+
+  // --- 1. トップページ描画 ---
+  function renderTopView() {
+    const profiles = getStoredProfiles();
+    const container = document.getElementById('recent-cards');
+    container.innerHTML = '';
+
+    const recent = [...profiles].sort((a,b) => b.createdAt - a.createdAt).slice(0, 3);
+    
+    if(recent.length === 0) {
+      container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-sub);">まだプロフィールがありません。</p>';
+      return;
+    }
+
+    recent.forEach(p => {
+      container.appendChild(createCardElement(p));
+    });
+  }
+
+  // カード要素生成
+  function createCardElement(p) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => showDetail(p.id);
+
+    card.innerHTML = `
+      ${renderIconHtml(p.icon, "icon-display")}
+      <div class="card-info">
+        <div class="card-nickname">${escapeHtml(p.nickname)}</div>
+        <div>
+          <span class="card-tag">❤️ ${escapeHtml(p.likes)}</span>
+          <span class="card-tag">✨ ${escapeHtml(p.hobbies)}</span>
+        </div>
+        <div class="card-message">${escapeHtml(p.message)}</div>
+      </div>
+    `;
+    return card;
+  }
+
+  // --- 2 & 3. プロフィール一覧 & 検索 ---
+  function renderList() {
+    const profiles = getStoredProfiles();
+    const query = document.getElementById('search-input').value.toLowerCase().trim();
+    const container = document.getElementById('all-cards');
+    container.innerHTML = '';
+
+    const filtered = profiles.filter(p => {
+      return (
+        p.nickname.toLowerCase().includes(query) ||
+        p.likes.toLowerCase().includes(query) ||
+        p.hobbies.toLowerCase().includes(query) ||
+        (p.music && p.music.toLowerCase().includes(query)) ||
+        (p.recent && p.recent.toLowerCase().includes(query))
+      );
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-sub); text-align:center; padding:20px;">見つかりませんでした。</p>';
+      return;
+    }
+
+    filtered.forEach(p => {
+      container.appendChild(createCardElement(p));
+    });
+  }
+
+  // --- 詳細ページ ---
+  function showDetail(profileId) {
+    const profiles = getStoredProfiles();
+    const p = profiles.find(item => item.id === profileId);
+    if (!p) return;
+
+    document.getElementById('detail-icon-container').innerHTML = renderIconHtml(p.icon, "detail-icon-display");
+    document.getElementById('detail-nickname').textContent = p.nickname;
+    document.getElementById('detail-likes').textContent = p.likes;
+    document.getElementById('detail-hobbies').textContent = p.hobbies;
+    
+    const musicBox = document.getElementById('detail-music-box');
+    if (p.music) {
+      document.getElementById('detail-music').textContent = p.music;
+      musicBox.style.display = 'block';
+    } else {
+      musicBox.style.display = 'none';
+    }
+
+    const recentBox = document.getElementById('detail-recent-box');
+    if (p.recent) {
+      document.getElementById('detail-recent').textContent = p.recent;
+      recentBox.style.display = 'block';
+    } else {
+      recentBox.style.display = 'none';
+    }
+
+    document.getElementById('detail-message').textContent = p.message;
+    document.getElementById('detail-talk-ok').style.display = p.talk_ok ? 'inline-block' : 'none';
+    document.getElementById('detail-id').textContent = `profile/${p.id}`;
+
+    navTo('detail-view');
+  }
+
+  // --- 4. 登録コード認証 ---
+  function verifyCode() {
+    const input = document.getElementById('code-input').value.trim().toUpperCase();
+    const errorEl = document.getElementById('auth-error');
+
+    if (!VALID_CODES.includes(input)) {
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    errorEl.style.display = 'none';
+    currentAuthenticatedCode = input;
+    openFormView(input);
+  }
+
+  // --- 5. フォーム表示 ---
+  function openFormView(code) {
+    const profiles = getStoredProfiles();
+    const existing = profiles.find(p => p.code === code);
+
+    const deleteBtn = document.getElementById('delete-btn');
+    const formTitle = document.getElementById('form-title');
+
+    if (existing) {
+      formTitle.textContent = "プロフィールの編集";
+      currentIconData = existing.icon || '🐱';
+      document.getElementById('form-nickname').value = existing.nickname;
+      document.getElementById('form-likes').value = existing.likes;
+      document.getElementById('form-hobbies').value = existing.hobbies;
+      document.getElementById('form-message').value = existing.message;
+      document.getElementById('form-music').value = existing.music || '';
+      document.getElementById('form-recent').value = existing.recent || '';
+      document.getElementById('form-talk-ok').checked = !!existing.talk_ok;
+      deleteBtn.style.display = 'block';
+    } else {
+      formTitle.textContent = "プロフィールの作成";
+      document.getElementById('profile-form').reset();
+      currentIconData = '🐱';
+      deleteBtn.style.display = 'none';
+    }
+
+    updateFormIconPreview();
+    navTo('form-view');
+  }
+
+  // --- 6. 保存処理 ---
+  function saveProfile(event) {
+    event.preventDefault();
+    let profiles = getStoredProfiles();
+    const existingIndex = profiles.findIndex(p => p.code === currentAuthenticatedCode);
+
+    const profileData = {
+      id: existingIndex >= 0 ? profiles[existingIndex].id : generateId(),
+      code: currentAuthenticatedCode,
+      nickname: document.getElementById('form-nickname').value.trim(),
+      icon: currentIconData,
+      likes: document.getElementById('form-likes').value.trim(),
+      hobbies: document.getElementById('form-hobbies').value.trim(),
+      message: document.getElementById('form-message').value.trim(),
+      music: document.getElementById('form-music').value.trim(),
+      recent: document.getElementById('form-recent').value.trim(),
+      talk_ok: document.getElementById('form-talk-ok').checked,
+      createdAt: existingIndex >= 0 ? profiles[existingIndex].createdAt : Date.now()
+    };
+
+    if (existingIndex >= 0) {
+      profiles[existingIndex] = profileData;
+    } else {
+      profiles.push(profileData);
+    }
+
+    saveStoredProfiles(profiles);
+
+    document.getElementById('view-my-profile-btn').onclick = () => showDetail(profileData.id);
+    navTo('complete-view');
+  }
+
+  // --- 8. 削除処理 ---
+  function deleteProfile() {
+    if (!confirm("本当にこのプロフィールを削除しますか？")) return;
+
+    let profiles = getStoredProfiles();
+    profiles = profiles.filter(p => p.code !== currentAuthenticatedCode);
+    saveStoredProfiles(profiles);
+
+    alert("削除が完了しました。");
+    navTo('top-view');
+  }
+
+  function escapeHtml(str) {
+    if(!str) return '';
+    return str.replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+  }
+
+  window.onload = function() {
+    renderTopView();
+  };
+</script>
+</body>
+</html>
