@@ -168,7 +168,7 @@
       transform: scale(0.99);
     }
     
-    /* アイコン表示用スタイル（写真/絵文字 両対応） */
+    /* アイコン表示用スタイル */
     .icon-display {
       width: 60px;
       height: 60px;
@@ -370,15 +370,6 @@
       color: var(--primary);
       margin-bottom: 12px;
     }
-
-    .demo-footer {
-      margin-top: 40px;
-      padding: 12px;
-      background: #e8ecef;
-      border-radius: 8px;
-      font-size: 0.75rem;
-      color: #555;
-    }
   </style>
 </head>
 <body>
@@ -431,7 +422,7 @@
     <h2 id="form-title" style="font-size: 1.2rem; margin-bottom: 16px;">プロフィール入力</h2>
     
     <form id="profile-form" onsubmit="saveProfile(event)">
-      <!-- 写真・アイコン選択（追加） -->
+      <!-- 写真・アイコン選択 -->
       <div class="form-group">
         <label>アイコン（写真またはイラスト）</label>
         <div class="icon-picker-container">
@@ -518,9 +509,7 @@
   <div id="detail-view" class="view">
     <span class="back-link" onclick="navTo('list-view')">← 一覧に戻る</span>
     <div class="detail-card">
-      <div id="detail-icon-container">
-        <!-- JSで画像か文字か分岐表示 -->
-      </div>
+      <div id="detail-icon-container"></div>
       <div id="detail-nickname" class="detail-nickname">---</div>
       
       <div id="detail-talk-ok" class="talk-badge" style="display: none;">💬 話しかけてOK！</div>
@@ -552,8 +541,6 @@
     </div>
   </div>
 
-  
-
 </div>
 
 <script>
@@ -562,16 +549,13 @@
     "TAP-R4N7-82", "TAP-2W6K-45", "TAP-H9C3-17", "TAP-5J8Q-36", "TAP-X2V7-94"
   ];
 
-  
-
-  let currentIconData = "🐱"; // 現在フォームで選択中のアイコン（文字か画像Base64）
+  let currentIconData = "🐱";
   let currentAuthenticatedCode = null;
 
   function getStoredProfiles() {
     const data = localStorage.getItem('seito_zukan_profiles');
     if (!data) {
-      localStorage.setItem('seito_zukan_profiles', JSON.stringify(INITIAL_PROFILES));
-      return INITIAL_PROFILES;
+      return [];
     }
     return JSON.parse(data);
   }
@@ -596,7 +580,6 @@
     return Math.random().toString(36).substring(2, 8);
   }
 
-  // --- 写真のアップロード処理 & 自動軽量リサイズ ---
   function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -605,38 +588,33 @@
     reader.onload = function(event) {
       const img = new Image();
       img.onload = function() {
-        // 画像を正方形かつ小さくリサイズ (200x200px)
         const canvas = document.createElement('canvas');
         const size = 200;
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
 
-        // 正方形にトリミング描画
         const minDim = Math.min(img.width, img.height);
         const sx = (img.width - minDim) / 2;
         const sy = (img.height - minDim) / 2;
 
         ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
         
-        // 圧縮したDataURLを取得
         currentIconData = canvas.toDataURL('image/jpeg', 0.8);
         updateFormIconPreview();
-        document.getElementById('form-icon-select').value = ""; // プリセット選択解除
+        document.getElementById('form-icon-select').value = "";
       };
       img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   }
 
-  // --- イラスト（絵文字）プリセット選択時の処理 ---
   function handlePresetIconSelect(val) {
     if (!val) return;
     currentIconData = val;
     updateFormIconPreview();
   }
 
-  // フォーム上のプレビュー要素を更新
   function updateFormIconPreview() {
     const box = document.getElementById('icon-preview-box');
     if (currentIconData.startsWith('data:image')) {
@@ -646,7 +624,6 @@
     }
   }
 
-  // アイコン描画用共通HTMLを返す関数
   function renderIconHtml(iconData, className = "icon-display") {
     if (iconData && iconData.startsWith('data:image')) {
       return `<img src="${iconData}" class="${className}">`;
@@ -655,7 +632,6 @@
     }
   }
 
-  // --- 1. トップページ描画 ---
   function renderTopView() {
     const profiles = getStoredProfiles();
     const container = document.getElementById('recent-cards');
@@ -673,7 +649,6 @@
     });
   }
 
-  // カード要素生成
   function createCardElement(p) {
     const card = document.createElement('div');
     card.className = 'card';
@@ -693,7 +668,6 @@
     return card;
   }
 
-  // --- 2 & 3. プロフィール一覧 & 検索 ---
   function renderList() {
     const profiles = getStoredProfiles();
     const query = document.getElementById('search-input').value.toLowerCase().trim();
@@ -720,7 +694,6 @@
     });
   }
 
-  // --- 詳細ページ ---
   function showDetail(profileId) {
     const profiles = getStoredProfiles();
     const p = profiles.find(item => item.id === profileId);
@@ -754,7 +727,6 @@
     navTo('detail-view');
   }
 
-  // --- 4. 登録コード認証 ---
   function verifyCode() {
     const input = document.getElementById('code-input').value.trim().toUpperCase();
     const errorEl = document.getElementById('auth-error');
@@ -769,7 +741,6 @@
     openFormView(input);
   }
 
-  // --- 5. フォーム表示 ---
   function openFormView(code) {
     const profiles = getStoredProfiles();
     const existing = profiles.find(p => p.code === code);
@@ -799,7 +770,6 @@
     navTo('form-view');
   }
 
-  // --- 6. 保存処理 ---
   function saveProfile(event) {
     event.preventDefault();
     let profiles = getStoredProfiles();
@@ -831,7 +801,6 @@
     navTo('complete-view');
   }
 
-  // --- 8. 削除処理 ---
   function deleteProfile() {
     if (!confirm("本当にこのプロフィールを削除しますか？")) return;
 
